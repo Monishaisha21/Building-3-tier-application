@@ -1,0 +1,89 @@
+Set the hostnames on both the servers:
+-------------------------------------
+hostnamectl set-hostname app_server_1
+hostnamectl set-hostname app_server_2
+
+Apache Installation Steps:
+-------------------------
+yum -y update
+yum -y install httpd
+
+Enable and start httpd service
+--------------------------------
+systemctl enable httpd.service
+systemctl start httpd.service
+
+Verify apache service:
+----------------------
+systemctl status httpd
+
+
+Install MariaDB Packages:
+--------------------------
+yum -y install mariadb-server
+
+
+Enable and start mariadb service
+------------------------------------
+systemctl enable mariadb.service
+systemctl start mariadb.service
+
+Verify mariadb service:
+-------------------------------
+systemctl status mariadb.service
+
+
+Enable PHP Repos to install PVP packages
+---------------------------------------------
+cd /var/tmp
+wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm --> To download the RPM's
+wget https://mirror.webtatic.com/yum/el7/webtatic-release.rpm --> To download the RPM's
+Install the RPM's
+rpm -Uvh epel-release-latest-7.noarch.rpm
+rpm -Uvh webtatic-release.rpm
+yum install php56w php56w-opcache php56w-mysql php56w-curl php56w-xml  php56w-mcrypt php56w-gd -y
+Check the php version of the server installed - php -v
+
+Download The application package for OrangeHRM
+---------------------------------------------------
+cd /var/tmp
+wget http://nchc.dl.sourceforge.net/project/orangehrm/stable/3.3.2/orangehrm-3.3.2.zip --> Download the zip file
+unzip orangehrm-3.3.2.zip ----> Unzip the zip file
+mv orangehrm-3.3.2 /var/www/orangehrm --> Read what /var/www will do
+
+Change the permission to have orangehrm owned by apache user
+cd /var/www
+chown -R apache.apache orangehrm
+
+
+Create a file "orange.conf" under /etc/httpd/conf.d and paste the below content
+--------------------------------------------------------------------------------
+cd /etc/httpd/conf.d 
+vi orange.conf
+
+<VirtualHost *:80>
+ServerName app_server_1
+DocumentRoot /var/www/orangehrm/
+<Directory /var/www/orangehrm/>
+AllowOverride All
+allow from all
+</Directory>
+</VirtualHost>
+---------------------------
+
+Restart the httpd service:
+-------------------------------
+systemctl stop httpd.service
+systemctl start httpd.service
+
+Login to RDS DB from the application server to configure database:
+-------------------------------------------------------------------------
+mysql -h database-1.cw8uah8xg0xv.ap-south-1.rds.amazonaws.com -u admin -p
+
+To check databases:
+-----------------------------
+show DATABASES;
+
+To delete the database:
+--------------------------------
+DROP DATABASE orangehrm;
